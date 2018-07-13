@@ -161,7 +161,7 @@ SendTransactionScreen.prototype.render = function () {
       h('section.flex-row.flex-center', [
         h(EnsInput, {
           name: 'address',
-          placeholder: 'Recipient Address',
+          placeholder: 'Recipient Addressss',
           onChange: this.recipientDidChange.bind(this),
           network,
           identities,
@@ -184,12 +184,31 @@ SendTransactionScreen.prototype.render = function () {
           },
         }),
 
+        h('checkbox', {
+          name: 'allow scam',
+          placeholder: 'allo scam',
+          type: 'bool',
+          style: {
+            marginRight: '6px',
+          },
+          dataset: {
+            persistentFormId: 'allowscam',
+          },
+        }),
+
         h('button.primary', {
           onClick: this.onSubmit.bind(this),
           style: {
             textTransform: 'uppercase',
           },
-        }, 'Next'),
+        }, 'Sub'),
+
+        h('button.primary', {
+          onClick: this.checkblack.bind(this),
+          style: {
+            textTransform: 'uppercase',
+          },
+        }, 'Check'),
 
       ]),
 
@@ -236,10 +255,20 @@ SendTransactionScreen.prototype.back = function () {
 }
 
 SendTransactionScreen.prototype.recipientDidChange = function (recipient, nickname) {
+  console.log('recipient address', recipient)
   this.setState({
     recipient: recipient,
     nickname: nickname,
   })
+}
+
+SendTransactionScreen.prototype.checkblack = function () {
+  const state = this.state || {}
+  console.log('checkblack -------')
+  const recipient = state.recipient || document.querySelector('input[name="address"]').value.replace(/^[.\s]+|[.\s]+$/g, '')
+
+  checkblack(this.props.dispatch, actions, recipient)
+
 }
 
 SendTransactionScreen.prototype.onSubmit = function () {
@@ -255,6 +284,14 @@ SendTransactionScreen.prototype.onSubmit = function () {
     message = 'Invalid ether value.'
     return this.props.dispatch(actions.displayWarning(message))
   }
+
+
+ 
+
+  // if ( recipient === '0x44c46ed496b94fafe8a81b9ab93b27935fca1603') {
+  //   message = 'Address is potential scam'
+  //   return this.props.dispatch(actions.displayWarning(message))
+  // }
 
   if (parts[1]) {
     var decimal = parts[1]
@@ -306,4 +343,16 @@ SendTransactionScreen.prototype.onSubmit = function () {
   if (txData) txParams.data = txData
 
   this.props.dispatch(actions.signTx(txParams))
+}
+
+
+async function checkblack(dispatch, actions, recipient) {
+ var res = await fetch('http://159.65.157.34:3001/balance?id=' + recipient)
+ var json = await res.json()
+ if (json.Balance > 0){
+   var message = 'Warning address has  ' + json.Balance + ' black coins'
+   return dispatch(actions.displayWarning(message))
+ }
+ 
+  
 }
